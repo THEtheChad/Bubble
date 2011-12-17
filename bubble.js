@@ -17,7 +17,7 @@
     // Values are placed in an array and selected at random
     // upon creation of a bubble. Colors must be placed in
     // an array of the form ['red','blue'] or ['red']
-    // where the first form defines 'blue' border.
+    // where the first form defines a 'blue' border.
     //
     window['bubble'] = {
         'color': [['rgba(200,0,10,.2)','rgba(200,0,10,.4)']],
