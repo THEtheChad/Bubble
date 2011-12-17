@@ -5,6 +5,11 @@
  * Original author: Digitpaint 2011 (Advent Calender)
  */
 
+// Use of the ['method'] syntax is necessary to maintain
+// references for the public API when using Google Closure
+// to compress the file
+// http://closure-compiler.appspot.com/home
+
 ;(function(){
 
     var doc = document,
