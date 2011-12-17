@@ -12,107 +12,104 @@
 
 ;(function(){
 
-    var doc = document,
-        html = doc.childNodes[1];
-
+    // Public API
     window['bubble'] = {
-        'colors': ["54, 20, 62"],
-        'count': 1,
-        'spacing': 150
+        'color': [['rgba(200,0,10,.2)','rgba(200,0,10,.4)']],
+        'pulse': [1],
+        'delay': [150],
+        'speed': [2],
+        'size': [20]
     };
+
+    var doc = document,
+        html = doc.getElementsByTagName('html')[0],
+        style = doc.createElement('style'),
+        bubbleEl = doc.createElement('b'),
+        backgroundImage = 'backgroundImage',
+        random = Math.random,
+        round = Math.round,
+        prefixes = ['', '-o-', '-ms-', '-moz-', '-webkit-'],
+        prefix;
+
+    html.appendChild( style );
 
     // Detect which w3c gradient syntax is supported and return the prefix
     // (undefined if no support)
-    var prefix = (function(){
-        var syntaxCheck = doc.createElement('i').style,
-            backgroundImage = 'backgroundImage',
-            prefixes = ['-o-', '-ms-', '-moz-', '-webkit-', ''],
-            i = prefixes.length;
-            
-        while( i ){
-            syntaxCheck[backgroundImage] = prefixes[--i] + 'linear-gradient(0,#007,#9f9)';
-            if(syntaxCheck[backgroundImage].indexOf( 'linear' ) + 1)
-                return prefixes[i];
-        }
-    })();
+    while( prefix = prefixes.pop() ){
+        bubbleEl.style[backgroundImage] = prefix + 'linear-gradient(0,#007,#9f9)';
+        if(bubbleEl.style[backgroundImage].indexOf( 'linear' ) + 1) break;
+    }
     
-    // Function to set the gradient
-    var setBubbleGradient = function(bubbleEl, color){
-      if( prefix != undefined )
-        bubbleEl.style.backgroundImage = prefix + "radial-gradient(circle contain, rgba(" + color + ", 0.2) 16px, rgba(" + color + ", 0.3) 17px, transparent 20px)";
-    };
-    
+    if( prefix == undefined )
+        return;
+
     // Actually creating the bubble
-    var createBubble = function(x, y){
-        var color = bubble['colors'][Math.round(Math.random() * (bubble['colors'].length - 1))];
+    bubbleEl.className = 'bubble';
+    var createBubble = function(e){
+        var color = bubble['color'][round(random() * (bubble['color'].length - 1))],
+            duration = bubble['speed'][round(random() * (bubble['speed'].length - 1))],
+            radius = bubble['size'][round(random() * (bubble['size'].length - 1))],
+            inner = radius * 3 / 4,
+            outer = inner + radius / 9,
+            diameter = radius * 2,
+            newNode = bubbleEl.cloneNode(),
+            x = 0,
+            y = 0;
+            
+        if(e){
+            if(e.pageX || e.pageY){
+                x = e.pageX;
+                y = e.pageY;
+            }
+            else if(e.clientX || e.clientY){
+                x = e.clientX + doc.body.scrollLeft;
+                y = e.clientY + doc.body.scrollTop;
+            }
+        }
+
+        newNode.style.left = x - radius + 'px';
+        newNode.style.top = y - radius + 'px';
+        newNode.style.height = diameter + 'px';
+        newNode.style.width = diameter + 'px';
         
-        var bubbleEl = doc.createElement("b");
-        bubbleEl.className = "bubble";
-        bubbleEl.style.left = x + "px";
-        bubbleEl.style.top = y + "px";
+        newNode.style[backgroundImage] = prefix +
+            'radial-gradient(circle contain,' +
+            color[0] + ' ' + inner + 'px,' +
+            (color[1] || color[0]) + ' ' + outer + 'px,' +
+            'transparent ' + radius + 'px)';
+
+        newNode.style[prefix + 'animation-duration'] = duration + 's';
         
-        setBubbleGradient(bubbleEl, color);
-        
-        function disposeBubble(){
-        html.removeChild(bubbleEl);
-        bubbleEl = null;
+        function destroyBubble(){
+            html.removeChild(newNode);
+            newNode = null;
         };
         
         // Just add both event handlers, only one will trigger.
         // We should do proper event detection.
-        bubbleEl.addEventListener("webkitAnimationEnd", disposeBubble);
-        bubbleEl.addEventListener("animationend", disposeBubble);              
+        newNode.addEventListener('webkitAnimationEnd', destroyBubble);
+        newNode.addEventListener('animationend', destroyBubble);              
         
-        
-        html.appendChild(bubbleEl);
+        html.appendChild(newNode);
     }
-    
-    // The event handler
-    var onBubbleClick = function(e){
-        var mouse = getEventMousePosition(e);
-        
-        createBubble(mouse.x, mouse.y);
-    }
-    
-    // Get the mouse coordinates from an event
-    var getEventMousePosition = function(e){
-        var loc = {
-                x: 0,
-                y: 0
-            }
-    
-        if(e){               
-            if(e.pageX || e.pageY){
-                loc.x = e.pageX;
-                loc.y = e.pageY;
-            }
-            else if(e.clientX || e.clientY){
-                loc.x = e.clientX + doc.body.scrollLeft;
-                loc.y = e.clientY + doc.body.scrollTop;
-            }
-        }
-        return loc;
-    }
-    
-    var css =
-        '.bubble{position:absolute;width:40px;height:40px;z-index:1000;' +
-            prefix + 'animation-name:pop;' +
-            prefix + 'animation-duration:2s;' +
-            prefix + 'animation-timing-function:ease}@' + prefix +
-            'keyframes pop{0%{' +  prefix + 'transform:scale(1)}70%{' + prefix + 'transform:scale(5)}100%{opacity:0}}';
 
-    var style = doc.createElement('style');
-    style.innerHTML = css;
-
-    html.appendChild( style );
+    style.innerHTML = '.bubble{' +
+        'position:absolute;z-index:1000;' +
+        prefix + 'animation-name:pop;' +
+        prefix + 'animation-timing-function:ease}' +
+        '@' + prefix + 'keyframes pop{' +
+        '0%{' +  prefix + 'transform:scale(1)}' +
+        '70%{' + prefix + 'transform:scale(5)}' +
+        '100%{opacity:0}}';
     
     html.onclick = function(e){
-        var i = bubble['count'];
+        var i = bubble['pulse'][round(random() * (bubble['pulse'].length - 1))],
+            delay = bubble['delay'][round(random() * (bubble['delay'].length - 1))];
     
         while( i )
             setTimeout(function(){
-                onBubbleClick(e);
-            }, bubble['spacing'] * --i);
+                createBubble(e);
+            }, delay * --i);
     };
 
 })();
