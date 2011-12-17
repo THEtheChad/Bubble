@@ -13,6 +13,12 @@
 ;(function(){
 
     // Public API
+    //
+    // Values are placed in an array and selected at random
+    // upon creation of a bubble. Colors must be placed in
+    // an array of the form ['red','blue'] or ['red']
+    // where the first form defines 'blue' border.
+    //
     window['bubble'] = {
         'color': [['rgba(200,0,10,.2)','rgba(200,0,10,.4)']],
         'pulse': [1],
@@ -31,6 +37,15 @@
         prefixes = ['', '-o-', '-ms-', '-moz-', '-webkit-'],
         prefix;
 
+    // Load the CSS required for the bubble animations
+    style.innerHTML = '.bubble{' +
+        'position:absolute;z-index:1000;' +
+        prefix + 'animation-name:pop;' +
+        prefix + 'animation-timing-function:ease}' +
+        '@' + prefix + 'keyframes pop{' +
+        '0%{' +  prefix + 'transform:scale(1)}' +
+        '70%{' + prefix + 'transform:scale(5)}' +
+        '100%{opacity:0}}';        
     html.appendChild( style );
 
     // Detect which w3c gradient syntax is supported and return the prefix
@@ -43,7 +58,7 @@
     if( prefix == undefined )
         return;
 
-    // Actually creating the bubble
+    // Create bubble
     bubbleEl.className = 'bubble';
     var createBubble = function(e){
         var color = bubble['color'][round(random() * (bubble['color'].length - 1))],
@@ -85,23 +100,14 @@
             newNode = null;
         };
         
-        // Just add both event handlers, only one will trigger.
-        // We should do proper event detection.
+        // Add both event handlers, only one will trigger.
         newNode.addEventListener('webkitAnimationEnd', destroyBubble);
         newNode.addEventListener('animationend', destroyBubble);              
         
         html.appendChild(newNode);
     }
-
-    style.innerHTML = '.bubble{' +
-        'position:absolute;z-index:1000;' +
-        prefix + 'animation-name:pop;' +
-        prefix + 'animation-timing-function:ease}' +
-        '@' + prefix + 'keyframes pop{' +
-        '0%{' +  prefix + 'transform:scale(1)}' +
-        '70%{' + prefix + 'transform:scale(5)}' +
-        '100%{opacity:0}}';
     
+    // Log all page clicks and queue the bubbles
     html.onclick = function(e){
         var i = bubble['pulse'][round(random() * (bubble['pulse'].length - 1))],
             delay = bubble['delay'][round(random() * (bubble['delay'].length - 1))];
